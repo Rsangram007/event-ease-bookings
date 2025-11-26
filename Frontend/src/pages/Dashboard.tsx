@@ -85,14 +85,29 @@ const Dashboard = () => {
         ) : (
           <div className='space-y-4'>
             {bookings.map((booking) => {
-              const event = booking.event as Event;
+              // const event = booking.event as Event;
+              // console.log("Event ", event);
+              const event = typeof booking.event === "object" 
+    ? (booking.event as Event) 
+    : null;
+
+  // If event is missing, show a fallback UI
+              if (!event) {
+                return (
+                  <Card key={booking._id} className="shadow-card">
+                    <CardContent className="py-8 text-center text-muted-foreground">
+                      Event details not available (possibly deleted)
+                    </CardContent>
+                  </Card>
+                )
+              }
               return (
                 <Card key={booking._id} className='shadow-card'>
                   <CardHeader>
                     <div className='flex items-start justify-between'>
                       <div className='flex-1'>
                         <CardTitle className='text-2xl mb-2'>
-                          {event.title}
+                          {event?.title}
                         </CardTitle>
                         <div className='flex gap-2'>
                           <Badge
