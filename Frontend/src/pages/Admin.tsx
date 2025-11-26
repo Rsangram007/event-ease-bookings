@@ -9,8 +9,6 @@ import {
 } from "@/store/slices/eventsSlice";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,17 +20,11 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Plus, Edit, Trash, Users } from "lucide-react";
 import { formatEventDate } from "@/utils/dateFormat";
 import { toast } from "sonner";
 import type { Event } from "@/types";
+import EventForm from "@/components/EventForm";
 
 const categories = ["Music", "Tech", "Business", "Sports", "Art", "Education"];
 
@@ -74,15 +66,17 @@ const Admin = () => {
     });
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreate = async (data: any) => {
     try {
-      await dispatch(createEvent(formData)).unwrap();
+      await dispatch(createEvent(data)).unwrap();
       toast.success("Event created successfully");
       setIsCreateOpen(false);
       resetForm();
     } catch (error: any) {
-      toast.error(error || "Failed to create event");
+      // Extract error message properly to avoid React child object error
+      const errorMessage =
+        error?.message || error?.data?.message || "Failed to create event";
+      toast.error(errorMessage);
     }
   };
 
@@ -100,14 +94,11 @@ const Admin = () => {
     setIsEditOpen(true);
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpdate = async (data: any) => {
     if (!selectedEvent) return;
 
     try {
-      await dispatch(
-        updateEvent({ id: selectedEvent._id, data: formData })
-      ).unwrap();
+      await dispatch(updateEvent({ id: selectedEvent._id, data })).unwrap();
       toast.success("Event updated successfully");
       setIsEditOpen(false);
       setSelectedEvent(null);
@@ -140,120 +131,6 @@ const Admin = () => {
     await dispatch(fetchEventAttendees(event._id));
     setIsAttendeesOpen(true);
   };
-
-  const EventForm = ({
-    onSubmit,
-    buttonText,
-  }: {
-    onSubmit: (e: React.FormEvent) => void;
-    buttonText: string;
-  }) => (
-    <form onSubmit={onSubmit} className='space-y-4'>
-      <div>
-        <label className='block text-sm font-medium mb-2'>Title</label>
-        <Input
-          value={formData.title}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, title: e.target.value }))
-          }
-          required
-        />
-      </div>
-
-      <div>
-        <label className='block text-sm font-medium mb-2'>Description</label>
-        <Textarea
-          value={formData.description}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, description: e.target.value }))
-          }
-          required
-        />
-      </div>
-
-      <div>
-        <label className='block text-sm font-medium mb-2'>Date</label>
-        <Input
-          type='date'
-          value={formData.date}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, date: e.target.value }))
-          }
-          required
-        />
-      </div>
-
-      <div>
-        <label className='block text-sm font-medium mb-2'>Location</label>
-        <Input
-          value={formData.location}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, location: e.target.value }))
-          }
-          required
-        />
-      </div>
-
-      <div>
-        <label className='block text-sm font-medium mb-2'>Location Type</label>
-        <Select
-          value={formData.locationType}
-          onValueChange={(value) =>
-            setFormData((prev) => ({ ...prev, locationType: value }))
-          }
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='Online'>Online</SelectItem>
-            <SelectItem value='In-Person'>In-Person</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <label className='block text-sm font-medium mb-2'>Category</label>
-        <Select
-          value={formData.category}
-          onValueChange={(value) =>
-            setFormData((prev) => ({ ...prev, category: value }))
-          }
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map((cat) => (
-              <SelectItem key={cat} value={cat}>
-                {cat}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <label className='block text-sm font-medium mb-2'>Capacity</label>
-        <Input
-          type='number'
-          min='1'
-          value={formData.capacity}
-          onChange={(e) =>
-            setFormData((prev) => ({
-              ...prev,
-              capacity: Number(e.target.value),
-            }))
-          }
-          required
-        />
-      </div>
-
-      <Button type='submit' className='w-full'>
-        {buttonText}
-      </Button>
-    </form>
-  );
 
   return (
     <div className='min-h-screen'>
@@ -366,7 +243,11 @@ const Admin = () => {
                 Edit event details in the form
               </DialogDescription>
             </DialogHeader>
-            <EventForm onSubmit={handleUpdate} buttonText='Update Event' />
+            <EventForm
+              initialData={formData}
+              onSubmit={handleUpdate}
+              buttonText='Update Event'
+            />
           </DialogContent>
         </Dialog>
 
