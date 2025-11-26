@@ -2,7 +2,7 @@ export interface User {
   _id: string;
   name: string;
   email: string;
-  role: 'user' | 'admin';
+  role: "user" | "admin";
   createdAt: string;
   updatedAt: string;
 }
@@ -14,10 +14,11 @@ export interface Event {
   description: string;
   date: string;
   location: string;
+  locationType?: string; 
   category: string;
   capacity: number;
   bookedSeats: number;
-  status: 'Upcoming' | 'Ongoing' | 'Completed';
+  status: "Upcoming" | "Ongoing" | "Completed";
   createdAt: string;
   updatedAt: string;
 }
@@ -27,8 +28,13 @@ export interface Booking {
   user: User | string;
   event: Event | string;
   seats: number;
-  status: 'Confirmed' | 'Cancelled';
+  status: "Confirmed" | "Cancelled";
   bookedAt: string;
+}
+
+// Attendee type for when booking data is populated with full user details
+export interface Attendee extends Booking {
+  user: User; // When populated
 }
 
 export interface AuthResponse {

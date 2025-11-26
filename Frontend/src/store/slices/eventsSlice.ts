@@ -1,11 +1,11 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { eventsAPI, adminAPI } from '@/services/api';
-import type { Event, User } from '@/types';
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { eventsAPI, adminAPI } from "@/services/api";
+import type { Event, User, Attendee } from "@/types";
 
 interface EventsState {
   events: Event[];
   currentEvent: Event | null;
-  attendees: User[];
+  attendees: Attendee[];
   loading: boolean;
   error: string | null;
   filters: {
@@ -26,89 +26,107 @@ const initialState: EventsState = {
 };
 
 export const fetchEvents = createAsyncThunk(
-  'events/fetchAll',
-  async (filters: EventsState['filters'] | undefined, { rejectWithValue }) => {
+  "events/fetchAll",
+  async (filters: EventsState["filters"] | undefined, { rejectWithValue }) => {
     try {
       const events = await eventsAPI.getAll(filters);
       return events;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch events');
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch events"
+      );
     }
   }
 );
 
 export const fetchEventById = createAsyncThunk(
-  'events/fetchById',
+  "events/fetchById",
   async (id: string, { rejectWithValue }) => {
     try {
       const event = await eventsAPI.getById(id);
       return event;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch event');
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch event"
+      );
     }
   }
 );
 
 export const createEvent = createAsyncThunk(
-  'events/create',
-  async (data: {
-    title: string;
-    description: string;
-    date: string;
-    location: string;
-    category: string;
-    capacity: number;
-  }, { rejectWithValue }) => {
+  "events/create",
+  async (
+    data: {
+      title: string;
+      description: string;
+      date: string;
+      location: string;
+      category: string;
+      capacity: number;
+    },
+    { rejectWithValue }
+  ) => {
     try {
       const event = await adminAPI.createEvent(data);
       return event;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to create event');
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to create event"
+      );
     }
   }
 );
 
 export const updateEvent = createAsyncThunk(
-  'events/update',
-  async ({ id, data }: { id: string; data: Partial<Event> }, { rejectWithValue }) => {
+  "events/update",
+  async (
+    { id, data }: { id: string; data: Partial<Event> },
+    { rejectWithValue }
+  ) => {
     try {
       const event = await adminAPI.updateEvent(id, data);
       return event;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update event');
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update event"
+      );
     }
   }
 );
 
 export const deleteEvent = createAsyncThunk(
-  'events/delete',
+  "events/delete",
   async (id: string, { rejectWithValue }) => {
     try {
       await adminAPI.deleteEvent(id);
       return id;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to delete event');
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to delete event"
+      );
     }
   }
 );
 
 export const fetchEventAttendees = createAsyncThunk(
-  'events/fetchAttendees',
+  "events/fetchAttendees",
   async (eventId: string, { rejectWithValue }) => {
     try {
       const attendees = await adminAPI.getEventAttendees(eventId);
       return attendees;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch attendees');
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch attendees"
+      );
     }
   }
 );
 
 const eventsSlice = createSlice({
-  name: 'events',
+  name: "events",
   initialState,
   reducers: {
-    setFilters: (state, action: PayloadAction<EventsState['filters']>) => {
+    setFilters: (state, action: PayloadAction<EventsState["filters"]>) => {
       state.filters = action.payload;
     },
     clearError: (state) => {
@@ -121,10 +139,13 @@ const eventsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchEvents.fulfilled, (state, action: PayloadAction<Event[]>) => {
-        state.loading = false;
-        state.events = action.payload;
-      })
+      .addCase(
+        fetchEvents.fulfilled,
+        (state, action: PayloadAction<Event[]>) => {
+          state.loading = false;
+          state.events = action.payload;
+        }
+      )
       .addCase(fetchEvents.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
@@ -133,10 +154,13 @@ const eventsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchEventById.fulfilled, (state, action: PayloadAction<Event>) => {
-        state.loading = false;
-        state.currentEvent = action.payload;
-      })
+      .addCase(
+        fetchEventById.fulfilled,
+        (state, action: PayloadAction<Event>) => {
+          state.loading = false;
+          state.currentEvent = action.payload;
+        }
+      )
       .addCase(fetchEventById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
@@ -145,7 +169,9 @@ const eventsSlice = createSlice({
         state.events.unshift(action.payload);
       })
       .addCase(updateEvent.fulfilled, (state, action: PayloadAction<Event>) => {
-        const index = state.events.findIndex(e => e._id === action.payload._id);
+        const index = state.events.findIndex(
+          (e) => e._id === action.payload._id
+        );
         if (index !== -1) {
           state.events[index] = action.payload;
         }
@@ -153,12 +179,18 @@ const eventsSlice = createSlice({
           state.currentEvent = action.payload;
         }
       })
-      .addCase(deleteEvent.fulfilled, (state, action: PayloadAction<string>) => {
-        state.events = state.events.filter(e => e._id !== action.payload);
-      })
-      .addCase(fetchEventAttendees.fulfilled, (state, action: PayloadAction<User[]>) => {
-        state.attendees = action.payload;
-      });
+      .addCase(
+        deleteEvent.fulfilled,
+        (state, action: PayloadAction<string>) => {
+          state.events = state.events.filter((e) => e._id !== action.payload);
+        }
+      )
+      .addCase(
+        fetchEventAttendees.fulfilled,
+        (state, action: PayloadAction<Attendee[]>) => {
+          state.attendees = action.payload;
+        }
+      );
   },
 });
 
