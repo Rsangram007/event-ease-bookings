@@ -15,7 +15,19 @@ export const createEvent = async (req, res) => {
   } = req.body;
 
   // Handle image upload if present
-  const imageUrl = req.file ? req.file.path : undefined;
+  console.log("Received file:", req.file);
+  if (req.file) {
+    console.log("File details:", {
+      path: req.file.path,
+      secure_url: req.file.secure_url,
+      url: req.file.url,
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+    });
+  }
+
+  // Use secure_url if available (Cloudinary), otherwise fallback to path
+  const imageUrl = req.file ? req.file.secure_url || req.file.path : undefined;
 
   const eventData = {
     eventId: generateEventId(),
@@ -29,7 +41,9 @@ export const createEvent = async (req, res) => {
     ...(imageUrl && { imageUrl }),
   };
 
+  console.log("Creating event with data:", eventData);
   const event = await Event.create(eventData);
+  console.log("Created event:", event);
   res.status(201).json(event);
 };
 
@@ -38,12 +52,22 @@ export const updateEvent = async (req, res) => {
   if (!event) return res.status(404).json({ message: "Event not found" });
 
   // Handle image upload if present
+  console.log("Received file for update:", req.file);
   if (req.file) {
-    req.body.imageUrl = req.file.path;
+    console.log("File details for update:", {
+      path: req.file.path,
+      secure_url: req.file.secure_url,
+      url: req.file.url,
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+    });
+    // Use secure_url if available (Cloudinary), otherwise fallback to path
+    req.body.imageUrl = req.file.secure_url || req.file.path;
   }
 
   Object.assign(event, req.body);
   await event.save();
+  console.log("Updated event:", event);
   res.json(event);
 };
 

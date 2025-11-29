@@ -57,9 +57,14 @@ export const createEvent = createAsyncThunk(
   "events/create",
   async (data: FormData, { rejectWithValue }) => {
     try {
+      console.log("Sending create event request with FormData:");
+      for (let [key, value] of data.entries()) {
+        console.log(key, value);
+      }
       const event = await adminAPI.createEvent(data);
       return event;
     } catch (error: any) {
+      console.error("Create event error:", error);
       return rejectWithValue(
         error.response?.data?.message || "Failed to create event"
       );
@@ -71,9 +76,14 @@ export const updateEvent = createAsyncThunk(
   "events/update",
   async ({ id, data }: { id: string; data: FormData }, { rejectWithValue }) => {
     try {
+      console.log("Sending update event request with FormData:");
+      for (let [key, value] of data.entries()) {
+        console.log(key, value);
+      }
       const event = await adminAPI.updateEvent(id, data);
       return event;
     } catch (error: any) {
+      console.error("Update event error:", error);
       return rejectWithValue(
         error.response?.data?.message || "Failed to update event"
       );

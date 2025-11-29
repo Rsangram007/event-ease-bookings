@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 interface FormData {
   title: string;
@@ -24,13 +25,19 @@ interface FormData {
 
 interface EventFormProps {
   initialData?: FormData;
-  onSubmit: (data: FormData) => void;
+  onSubmit: (data: FormData, imageFile: File | null) => void;
   buttonText: string;
+  isLoading?: boolean;
 }
 
 const categories = ["Music", "Tech", "Business", "Sports", "Art", "Education"];
 
-const EventForm = ({ initialData, onSubmit, buttonText }: EventFormProps) => {
+const EventForm = ({
+  initialData,
+  onSubmit,
+  buttonText,
+  isLoading,
+}: EventFormProps) => {
   const [formData, setFormData] = useState<FormData>(
     initialData || {
       title: "",
@@ -53,7 +60,7 @@ const EventForm = ({ initialData, onSubmit, buttonText }: EventFormProps) => {
     const { imageUrl, ...formDataWithoutImageUrl } = formData;
     const dataToSend = imageUrl ? formData : formDataWithoutImageUrl;
 
-    onSubmit(dataToSend as FormData);
+    onSubmit(dataToSend as FormData, imageFile);
   };
 
   return (
@@ -252,8 +259,15 @@ const EventForm = ({ initialData, onSubmit, buttonText }: EventFormProps) => {
       </div>
 
       <div className='flex justify-end pt-4'>
-        <Button type='submit' className='w-full sm:w-auto'>
-          {buttonText}
+        <Button type='submit' className='w-full sm:w-auto' disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+              Please wait...
+            </>
+          ) : (
+            buttonText
+          )}
         </Button>
       </div>
     </form>

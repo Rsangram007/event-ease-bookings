@@ -25,9 +25,27 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // For FormData requests, let the browser set the Content-Type header
+    if (config.data instanceof FormData) {
+      console.log("FormData detected, removing Content-Type header");
+      delete config.headers["Content-Type"];
+    }
+
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.response.use(
+  (response) => {
+    console.log("API Response:", response.status, response.data);
+    return response;
+  },
+  (error) => {
+    console.error("API Error:", error.response?.status, error.response?.data);
     return Promise.reject(error);
   }
 );
@@ -92,11 +110,13 @@ export const bookingsAPI = {
 
 export const adminAPI = {
   createEvent: async (data: FormData): Promise<Event> => {
+    console.log("Sending create event request to /admin/events");
     const response = await api.post<Event>("/admin/events", data);
     return response.data;
   },
 
   updateEvent: async (id: string, data: FormData): Promise<Event> => {
+    console.log(`Sending update event request to /admin/events/${id}`);
     const response = await api.put<Event>(`/admin/events/${id}`, data);
     return response.data;
   },

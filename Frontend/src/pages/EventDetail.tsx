@@ -178,7 +178,7 @@ const EventDetail = () => {
                         onChange={(e) => setSeats(Number(e.target.value))}
                         className='w-full border border-input rounded-md px-3 py-2 bg-background'
                       >
-                        {[...Array(Math.min(10, availableSeats)).keys()].map(
+                        {[...Array(Math.min(2, availableSeats)).keys()].map(
                           (i) => (
                             <option key={i + 1} value={i + 1}>
                               {i + 1} {i + 1 === 1 ? "Seat" : "Seats"}

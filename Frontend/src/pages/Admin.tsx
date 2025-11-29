@@ -20,7 +20,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Plus, Edit, Trash, Users } from "lucide-react";
+import { Plus, Edit, Trash, Users, Loader2 } from "lucide-react";
 import { formatEventDate } from "@/utils/dateFormat";
 import { toast } from "sonner";
 import type { Event } from "@/types";
@@ -39,6 +39,8 @@ const Admin = () => {
   const [isAttendeesOpen, setIsAttendeesOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -68,7 +70,8 @@ const Admin = () => {
     });
   };
 
-  const handleCreate = async (data: any) => {
+  const handleCreate = async (data: any, imageFile: File | null) => {
+    setIsCreating(true);
     try {
       // Create FormData object
       const formData = new FormData();
@@ -81,6 +84,14 @@ const Admin = () => {
         }
       });
 
+      // Append image file if present
+      if (imageFile) {
+        console.log("Appending image file to FormData:", imageFile.name);
+        formData.append("image", imageFile);
+      } else {
+        console.log("No image file to append");
+      }
+
       await dispatch(createEvent(formData)).unwrap();
       toast.success("Event created successfully");
       setIsCreateOpen(false);
@@ -90,6 +101,8 @@ const Admin = () => {
       const errorMessage =
         error?.message || error?.data?.message || "Failed to create event";
       toast.error(errorMessage);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -108,8 +121,9 @@ const Admin = () => {
     setIsEditOpen(true);
   };
 
-  const handleUpdate = async (data: any) => {
+  const handleUpdate = async (data: any, imageFile: File | null) => {
     if (!selectedEvent) return;
+    setIsUpdating(true);
 
     try {
       // Create FormData object
@@ -123,6 +137,17 @@ const Admin = () => {
         }
       });
 
+      // Append image file if present
+      if (imageFile) {
+        console.log(
+          "Appending image file to FormData for update:",
+          imageFile.name
+        );
+        formData.append("image", imageFile);
+      } else {
+        console.log("No image file to append for update");
+      }
+
       await dispatch(
         updateEvent({ id: selectedEvent._id, data: formData })
       ).unwrap();
@@ -132,6 +157,8 @@ const Admin = () => {
       resetForm();
     } catch (error: any) {
       toast.error(error || "Failed to update event");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -187,7 +214,11 @@ const Admin = () => {
                   with an asterisk (*).
                 </DialogDescription>
               </DialogHeader>
-              <EventForm onSubmit={handleCreate} buttonText='Create Event' />
+              <EventForm
+                onSubmit={handleCreate}
+                buttonText='Create Event'
+                isLoading={isCreating}
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -268,48 +299,26 @@ const Admin = () => {
             <DialogHeader>
               <DialogTitle>Edit Event</DialogTitle>
               <DialogDescription id='edit-event-description'>
-                Update the event details below. Required fields are marked with
-                an asterisk (*).
+                Update the event details below.
               </DialogDescription>
             </DialogHeader>
-            <EventForm
-              initialData={formData}
-              onSubmit={handleUpdate}
-              buttonText='Update Event'
-            />
-          </DialogContent>
-        </Dialog>
-
-        {/* Attendees Dialog */}
-        <Dialog open={isAttendeesOpen} onOpenChange={setIsAttendeesOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                Event Attendees - {selectedEvent?.title}
-              </DialogTitle>
-              <DialogDescription id='attendees-description'>
-                List of attendees for the selected event
-              </DialogDescription>
-            </DialogHeader>
-            <div className='space-y-2 max-h-96 overflow-y-auto'>
-              {attendees.length === 0 ? (
-                <p className='text-muted-foreground text-center py-4'>
-                  No attendees yet
-                </p>
-              ) : (
-                attendees.map((attendee) => (
-                  <div
-                    key={attendee._id}
-                    className='p-3 border border-border rounded-lg'
-                  >
-                    <p className='font-medium'>{attendee.user.name}</p>
-                    <p className='text-sm text-muted-foreground'>
-                      {attendee.user.email}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
+            {selectedEvent && (
+              <EventForm
+                initialData={{
+                  title: selectedEvent.title,
+                  description: selectedEvent.description,
+                  date: selectedEvent.date.split("T")[0],
+                  location: selectedEvent.location,
+                  locationType: selectedEvent.locationType || "In-Person",
+                  category: selectedEvent.category,
+                  capacity: selectedEvent.capacity,
+                  imageUrl: selectedEvent.imageUrl || "",
+                }}
+                onSubmit={handleUpdate}
+                buttonText='Update Event'
+                isLoading={isUpdating}
+              />
+            )}
           </DialogContent>
         </Dialog>
 
@@ -317,10 +326,10 @@ const Admin = () => {
         <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Delete Event</DialogTitle>
-              <DialogDescription id='delete-confirmation-description'>
-                Are you sure you want to delete the event "
-                {selectedEvent?.title}"? This action cannot be undone.
+              <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this event? This action cannot
+                be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -330,6 +339,47 @@ const Admin = () => {
               <Button variant='destructive' onClick={handleDeleteConfirm}>
                 Delete
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Attendees Dialog */}
+        <Dialog open={isAttendeesOpen} onOpenChange={setIsAttendeesOpen}>
+          <DialogContent className='max-w-2xl max-h-[80vh] overflow-y-auto'>
+            <DialogHeader>
+              <DialogTitle>Event Attendees</DialogTitle>
+              <DialogDescription>
+                {selectedEvent?.title} - {attendees.length} confirmed attendees
+              </DialogDescription>
+            </DialogHeader>
+            <div className='space-y-4'>
+              {attendees.length > 0 ? (
+                attendees.map((attendee) => (
+                  <div
+                    key={attendee.user._id}
+                    className='flex items-center justify-between p-4 border rounded-lg'
+                  >
+                    <div>
+                      <p className='font-medium'>{attendee.user.name}</p>
+                    </div>
+                    <div className='text-right'>
+                      <p className='text-sm text-muted-foreground'>
+                        {new Date(attendee.bookedAt).toLocaleDateString()}
+                      </p>
+                      <p className='text-sm font-medium'>
+                        {attendee.seats} seat(s)
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className='text-center text-muted-foreground py-4'>
+                  No attendees found for this event.
+                </p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setIsAttendeesOpen(false)}>Close</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
