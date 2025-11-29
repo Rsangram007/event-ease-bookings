@@ -14,13 +14,7 @@ connectDB();
 const app = express();
 app.use(
   cors({
-    origin: [
-      "http://localhost:8080",
-      "http://localhost:5000",
-      "https://event-ease-bookings.onrender.com",
-      "https://event-ease-bookings.vercel.app/",
-
-    ],
+    origin: process.env.CORS_ORIGIN.split(","),
     credentials: true,
     optionsSuccessStatus: 200,
   })
