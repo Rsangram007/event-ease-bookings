@@ -120,7 +120,7 @@ const Events = () => {
               </SelectContent>
             </Select>
 
-            <Select value={location} onValueChange={setLocation}>
+            {/* <Select value={location} onValueChange={setLocation}>
               <SelectTrigger>
                 <SelectValue placeholder='Location' />
               </SelectTrigger>
@@ -131,7 +131,7 @@ const Events = () => {
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </Select> */}
 
             <Button onClick={handleApplyFilters}>Apply Filters</Button>
           </div>
