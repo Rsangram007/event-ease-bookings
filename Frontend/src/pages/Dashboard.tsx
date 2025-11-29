@@ -13,7 +13,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Calendar, MapPin, Users, X } from "lucide-react";
+import { Calendar, MapPin, Users, X, Ticket } from "lucide-react";
 import { formatEventDate, canCancelBooking } from "@/utils/dateFormat";
 import type { Booking, Event } from "@/types";
 import { toast } from "sonner";
@@ -32,7 +32,7 @@ const Dashboard = () => {
   useEffect(() => {
     dispatch(fetchMyBookings());
   }, [dispatch]);
-  console.log("Booking ", bookings);
+
   const handleCancelClick = (bookingId: string, event: Event) => {
     if (!canCancelBooking(event.date)) {
       toast.error("Cannot cancel booking for past events");
@@ -83,88 +83,163 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className='space-y-4'>
+          <div className='grid grid-cols-1 gap-6'>
             {bookings.map((booking) => {
-              // const event = booking.event as Event;
-              // console.log("Event ", event);
-              const event = typeof booking.event === "object" 
-    ? (booking.event as Event) 
-    : null;
+              const event =
+                typeof booking.event === "object"
+                  ? (booking.event as Event)
+                  : null;
 
-  // If event is missing, show a fallback UI
+              // If event is missing, show a fallback UI
               if (!event) {
                 return (
-                  <Card key={booking._id} className="shadow-card">
-                    <CardContent className="py-8 text-center text-muted-foreground">
+                  <Card key={booking._id} className='shadow-card'>
+                    <CardContent className='py-8 text-center text-muted-foreground'>
                       Event details not available (possibly deleted)
                     </CardContent>
                   </Card>
-                )
+                );
               }
+
+              const availableSeats = event.capacity - event.bookedSeats;
+
               return (
-                <Card key={booking._id} className='shadow-card'>
-                  <CardHeader>
-                    <div className='flex items-start justify-between'>
-                      <div className='flex-1'>
-                        <CardTitle className='text-2xl mb-2'>
-                          {event?.title}
-                        </CardTitle>
-                        <div className='flex gap-2'>
-                          <Badge
-                            className={
-                              event.status === "Upcoming"
-                                ? "bg-primary"
-                                : "bg-muted"
-                            }
-                          >
-                            {event.status}
-                          </Badge>
-                          <Badge
-                            variant={
-                              booking.status === "Confirmed"
-                                ? "default"
-                                : "destructive"
-                            }
-                          >
-                            {booking.status}
-                          </Badge>
+                <Card
+                  key={booking._id}
+                  className='shadow-card hover:shadow-elegant transition-all duration-300 overflow-hidden border border-border rounded-xl'
+                >
+                  <div className='flex flex-col md:flex-row'>
+                    {/* Event Image */}
+                    <div className='md:w-1/3'>
+                      {event.imageUrl ? (
+                        <div className='h-48 md:h-full w-full'>
+                          <img
+                            src={event.imageUrl}
+                            alt={event.title}
+                            className='w-full h-full object-cover'
+                          />
+                        </div>
+                      ) : (
+                        <div className='h-48 md:h-full w-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center'>
+                          <span className='text-muted-foreground text-lg'>
+                            No Image
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Event Details */}
+                    <div className='md:w-2/3 p-6'>
+                      <div className='flex flex-col h-full'>
+                        <div className='flex-grow'>
+                          <div className='flex flex-wrap items-start justify-between gap-3 mb-4'>
+                            <CardTitle className='text-2xl'>
+                              {event.title}
+                            </CardTitle>
+                            <div className='flex gap-2'>
+                              <Badge
+                                className={
+                                  event.status === "Upcoming"
+                                    ? "bg-primary"
+                                    : event.status === "Ongoing"
+                                    ? "bg-yellow-500"
+                                    : "bg-gray-500"
+                                }
+                              >
+                                {event.status}
+                              </Badge>
+                              <Badge
+                                variant={
+                                  booking.status === "Confirmed"
+                                    ? "default"
+                                    : "destructive"
+                                }
+                              >
+                                {booking.status}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-6'>
+                            <div className='flex items-start gap-3'>
+                              <div className='mt-1 p-2 bg-primary/10 rounded-lg'>
+                                <Calendar className='h-5 w-5 text-primary' />
+                              </div>
+                              <div>
+                                <p className='font-semibold text-sm text-muted-foreground'>
+                                  Date & Time
+                                </p>
+                                <p className='font-medium'>
+                                  {formatEventDate(event.date)}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className='flex items-start gap-3'>
+                              <div className='mt-1 p-2 bg-primary/10 rounded-lg'>
+                                <MapPin className='h-5 w-5 text-primary' />
+                              </div>
+                              <div>
+                                <p className='font-semibold text-sm text-muted-foreground'>
+                                  Location
+                                </p>
+                                <p className='font-medium'>{event.location}</p>
+                              </div>
+                            </div>
+
+                            <div className='flex items-start gap-3'>
+                              <div className='mt-1 p-2 bg-primary/10 rounded-lg'>
+                                <Users className='h-5 w-5 text-primary' />
+                              </div>
+                              <div>
+                                <p className='font-semibold text-sm text-muted-foreground'>
+                                  Seats Booked
+                                </p>
+                                <p className='font-medium'>
+                                  {booking.seats}{" "}
+                                  {booking.seats === 1 ? "seat" : "seats"}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className='flex items-start gap-3'>
+                              <div className='mt-1 p-2 bg-primary/10 rounded-lg'>
+                                <Ticket className='h-5 w-5 text-primary' />
+                              </div>
+                              <div>
+                                <p className='font-semibold text-sm text-muted-foreground'>
+                                  Booking ID
+                                </p>
+                                <p className='font-medium font-mono text-sm'>
+                                  {booking._id.substring(0, 8)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className='flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border'>
+                          <p className='text-sm text-muted-foreground'>
+                            Booked on: {formatEventDate(booking.bookedAt)}
+                          </p>
+
+                          {booking.status === "Confirmed" &&
+                            canCancelBooking(event.date) && (
+                              <Button
+                                variant='outline'
+                                className='border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground'
+                                onClick={() =>
+                                  handleCancelClick(booking._id, event)
+                                }
+                              >
+                                <X className='h-4 w-4 mr-2' />
+                                Cancel Booking
+                              </Button>
+                            )}
                         </div>
                       </div>
-                      {booking.status === "Confirmed" &&
-                        canCancelBooking(event.date) && (
-                          <Button
-                            variant='destructive'
-                            size='sm'
-                            onClick={() =>
-                              handleCancelClick(booking._id, event)
-                            }
-                          >
-                            <X className='h-4 w-4 mr-2' />
-                            Cancel
-                          </Button>
-                        )}
                     </div>
-                  </CardHeader>
-                  <CardContent className='space-y-3'>
-                    <div className='flex items-center gap-2 text-sm'>
-                      <Calendar className='h-4 w-4 text-primary' />
-                      <span>{formatEventDate(event.date)}</span>
-                    </div>
-                    <div className='flex items-center gap-2 text-sm'>
-                      <MapPin className='h-4 w-4 text-primary' />
-                      <span>{event.location}</span>
-                    </div>
-                    <div className='flex items-center gap-2 text-sm'>
-                      <Users className='h-4 w-4 text-primary' />
-                      <span>
-                        {booking.seats} {booking.seats === 1 ? "seat" : "seats"}{" "}
-                        booked
-                      </span>
-                    </div>
-                    <p className='text-sm text-muted-foreground'>
-                      Booked on: {formatEventDate(booking.bookedAt)}
-                    </p>
-                  </CardContent>
+                  </div>
                 </Card>
               );
             })}
