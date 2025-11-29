@@ -16,6 +16,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
 api.interceptors.request.use(
@@ -90,19 +91,12 @@ export const bookingsAPI = {
 };
 
 export const adminAPI = {
-  createEvent: async (data: {
-    title: string;
-    description: string;
-    date: string;
-    location: string;
-    category: string;
-    capacity: number;
-  }): Promise<Event> => {
+  createEvent: async (data: FormData): Promise<Event> => {
     const response = await api.post<Event>("/admin/events", data);
     return response.data;
   },
 
-  updateEvent: async (id: string, data: Partial<Event>): Promise<Event> => {
+  updateEvent: async (id: string, data: FormData): Promise<Event> => {
     const response = await api.put<Event>(`/admin/events/${id}`, data);
     return response.data;
   },

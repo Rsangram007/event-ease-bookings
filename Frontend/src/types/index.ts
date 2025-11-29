@@ -14,13 +14,14 @@ export interface Event {
   description: string;
   date: string;
   location: string;
-  locationType?: string; 
+  locationType?: string;
   category: string;
   capacity: number;
   bookedSeats: number;
   status: "Upcoming" | "Ongoing" | "Completed";
   createdAt: string;
   updatedAt: string;
+  imageUrl?: string;
 }
 
 export interface Booking {

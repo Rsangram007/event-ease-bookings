@@ -21,6 +21,7 @@ const eventSchema = new mongoose.Schema(
       enum: ["Upcoming", "Ongoing", "Completed"],
       default: "Upcoming",
     },
+    imageUrl: { type: String },
   },
   { timestamps: true }
 );

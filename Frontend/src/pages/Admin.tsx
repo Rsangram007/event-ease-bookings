@@ -48,6 +48,7 @@ const Admin = () => {
     locationType: "In-Person",
     category: "Tech",
     capacity: 100,
+    imageUrl: "",
   });
 
   useEffect(() => {
@@ -63,12 +64,24 @@ const Admin = () => {
       locationType: "In-Person",
       category: "Tech",
       capacity: 100,
+      imageUrl: "",
     });
   };
 
   const handleCreate = async (data: any) => {
     try {
-      await dispatch(createEvent(data)).unwrap();
+      // Create FormData object
+      const formData = new FormData();
+
+      // Append all fields to FormData
+      Object.keys(data).forEach((key) => {
+        if (key !== "imageUrl" || data[key]) {
+          // Skip empty imageUrl
+          formData.append(key, data[key]);
+        }
+      });
+
+      await dispatch(createEvent(formData)).unwrap();
       toast.success("Event created successfully");
       setIsCreateOpen(false);
       resetForm();
@@ -90,6 +103,7 @@ const Admin = () => {
       locationType: event.locationType || "In-Person",
       category: event.category,
       capacity: event.capacity,
+      imageUrl: event.imageUrl || "",
     });
     setIsEditOpen(true);
   };
@@ -98,7 +112,20 @@ const Admin = () => {
     if (!selectedEvent) return;
 
     try {
-      await dispatch(updateEvent({ id: selectedEvent._id, data })).unwrap();
+      // Create FormData object
+      const formData = new FormData();
+
+      // Append all fields to FormData
+      Object.keys(data).forEach((key) => {
+        if (key !== "imageUrl" || data[key]) {
+          // Skip empty imageUrl
+          formData.append(key, data[key]);
+        }
+      });
+
+      await dispatch(
+        updateEvent({ id: selectedEvent._id, data: formData })
+      ).unwrap();
       toast.success("Event updated successfully");
       setIsEditOpen(false);
       setSelectedEvent(null);
@@ -152,11 +179,12 @@ const Admin = () => {
                 Create Event
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className='max-w-4xl max-h-[90vh] overflow-y-auto'>
               <DialogHeader>
                 <DialogTitle>Create New Event</DialogTitle>
                 <DialogDescription id='create-event-description'>
-                  Create a new event by filling in the form fields
+                  Fill in the event details below. Required fields are marked
+                  with an asterisk (*).
                 </DialogDescription>
               </DialogHeader>
               <EventForm onSubmit={handleCreate} buttonText='Create Event' />
@@ -236,11 +264,12 @@ const Admin = () => {
 
         {/* Edit Dialog */}
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-          <DialogContent>
+          <DialogContent className='max-w-4xl max-h-[90vh] overflow-y-auto'>
             <DialogHeader>
               <DialogTitle>Edit Event</DialogTitle>
               <DialogDescription id='edit-event-description'>
-                Edit event details in the form
+                Update the event details below. Required fields are marked with
+                an asterisk (*).
               </DialogDescription>
             </DialogHeader>
             <EventForm

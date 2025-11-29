@@ -55,17 +55,7 @@ export const fetchEventById = createAsyncThunk(
 
 export const createEvent = createAsyncThunk(
   "events/create",
-  async (
-    data: {
-      title: string;
-      description: string;
-      date: string;
-      location: string;
-      category: string;
-      capacity: number;
-    },
-    { rejectWithValue }
-  ) => {
+  async (data: FormData, { rejectWithValue }) => {
     try {
       const event = await adminAPI.createEvent(data);
       return event;
@@ -79,10 +69,7 @@ export const createEvent = createAsyncThunk(
 
 export const updateEvent = createAsyncThunk(
   "events/update",
-  async (
-    { id, data }: { id: string; data: Partial<Event> },
-    { rejectWithValue }
-  ) => {
+  async ({ id, data }: { id: string; data: FormData }, { rejectWithValue }) => {
     try {
       const event = await adminAPI.updateEvent(id, data);
       return event;
